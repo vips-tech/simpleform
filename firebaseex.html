@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Form</title>
+</head>
+<body>
+
+    <h1>Simple Firebase Form</h1>
+
+    <form id="userForm">
+        <label>Name:</label>
+        <input type="text" id="name" required><br><br>
+
+        <label>Password:</label>
+        <input type="password" id="password" required><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <br>
+
+    <button id="viewBtn">View Stored Data</button>
+
+    <h3>Stored Users</h3>
+    <div id="dataContainer"></div>
+
+    <p id="status"></p>
+
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
+        import {
+            getDatabase,
+            ref,
+            push,
+            set,
+            get
+        } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3PoeWUIy5RNqWH7QWR-v8qUlhNYqEt5o",
+            authDomain: "vtest-af3ad.firebaseapp.com",
+            databaseURL: "https://test-af3ad-default-rtdb.firebaseio.com/",
+            projectId: "test-af3ad",
+            storageBucket: "test-af3ad.firebasestorage.app",
+            messagingSenderId: "804528676457",
+            appId: "1:804528676457:web:25e17b1347d2ee16e6ccf8",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        const form = document.getElementById("userForm");
+        const status = document.getElementById("status");
+
+        // Save Data
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const password = document.getElementById("password").value;
+
+            const userRef = push(ref(database, "users"));
+
+            set(userRef, {
+                name: name,
+                password: password
+            })
+            .then(() => {
+                status.innerText = "Data saved successfully!";
+                form.reset();
+            })
+            .catch((error) => {
+                status.innerText = error.message;
+            });
+        });
+
+        // View Data
+        document.getElementById("viewBtn").addEventListener("click", () => {
+
+            const dataContainer = document.getElementById("dataContainer");
+
+            get(ref(database, "users"))
+            .then((snapshot) => {
+
+                if (snapshot.exists()) {
+
+                    let html = "<table border='1' cellpadding='10'>";
+                    html += "<tr><th>Name</th><th>Password</th></tr>";
+
+                    snapshot.forEach((childSnapshot) => {
+                        const data = childSnapshot.val();
+
+                        html += `
+                            <tr>
+                                <td>${data.name}</td>
+                                <td>${data.password}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += "</table>";
+                    dataContainer.innerHTML = html;
+
+                } else {
+                    dataContainer.innerHTML = "No data found.";
+                }
+
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+
+        });
+
+    </script>
+
+</body>
+</html>
